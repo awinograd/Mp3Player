@@ -23,6 +23,7 @@ void addKeyValuePair(char* response, char* key, char* val, boolean firstPair){
   char* appendChars = ",\"";
   int offset = 1;
   if (firstPair){
+    strcpy(response, "{}");
     offset = 0;
     appendChars = "\"";
   }
@@ -44,14 +45,10 @@ void addKeyValuePair(char* response, char* key, char* val){
 
 void returnPlayerState(){
   char response[100];
-  strcpy(response, "{}");
-  //strcpy(response, "{\"volume\": ");
-  //itoa(song.getVolume(), response+strlen(response), 10)
-  //strcpy(response+strlen(response), "}\0");
   char buff[5];
   itoa(song.getVolume(), buff, 10);
-  addKeyValuePair(response, "msg", "CONNECTED");
-  addKeyValuePair(response, "volume", buff, true);
+  addKeyValuePair(response, "msg", "CONNECTED",true);
+  addKeyValuePair(response, "volume", buff);
   addKeyValuePair(response, "volume2", "test");  
   Uart.print(response);
 }
@@ -127,7 +124,6 @@ void loop() {
       double v = song.setVolume(volume);
       Uart.print("VOLUME: ");
       Uart.print(v);
-      Uart.print("!");
     }
     else if (strcmp(command, "SEEK") == 0) {
       int seek = song.seek(atoi(data));
