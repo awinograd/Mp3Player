@@ -10,6 +10,7 @@ HardwareSerial Uart = HardwareSerial();
 char val;         // variable to receive data from the Uart port
 int ledpin = 11;  // LED connected to pin 2 (on-board LED)
 Song song;
+char response[100];
 
 void setup()
 {
@@ -44,13 +45,14 @@ void addKeyValuePair(char* response, char* key, char* val){
 }
 
 void returnPlayerState(){
-  char response[100];
   char buff[5];
   itoa(song.getVolume(), buff, 10);
-  addKeyValuePair(response, "msg", "CONNECTED",true);
+  addKeyValuePair(response, "command", "CONNECTED",true);
   addKeyValuePair(response, "volume", buff);
-  addKeyValuePair(response, "volume2", "test");  
-  Uart.print(response);
+  addKeyValuePair(response, "title", song.getCurrentSong());
+  //addKeyValuePair(response, "title", buff);
+  //addKeyValuePair(response, "volume2", "test");  
+  Serial.println(response);
 }
 
 char* readCommand(char* buffer, char* data){
@@ -87,8 +89,7 @@ void loop() {
     char command[UART_BUFFER_SIZE];
     char data[10];
     readCommand(command, data);
-    //Uart.print(command);
-    //Uart.print(data);
+    addKeyValuePair(response, "command", command, true);
     
     if (strcmp(command, "CONNECTED") == 0){
       returnPlayerState();
@@ -100,44 +101,45 @@ void loop() {
     }
     else if (strcmp(command, "PLAY")==0){
       song.play();
-      Uart.print("sPLAYING");
+      //addKeyValuePair(response, "title", song.getCurrentSong());
     }
     else if (strcmp(command, "PAUSE")==0){
       song.pause();
-      Uart.print("PAUSED");      
+      addKeyValuePair(response, "title", song.getCurrentSong());
     }
     else if (strcmp(command, "NEXT_TRACK")==0){
       boolean next = song.nextFile();
       if (next) {
-        Uart.print(song.getCurrentSong()); 
+        addKeyValuePair(response, "title", song.getCurrentSong());
       }
       else{
-        Uart.print("END OF SONGS");
+        addKeyValuePair(response, "message", "END OF SONGS");
       }
     }
     else if (strcmp(command, "PREV_TRACK")==0){
-      song.prevFile();      
-      Uart.print("PREV");     
+      boolean prev = song.prevFile();        
+      if (prev) {
+        addKeyValuePair(response, "title", song.getCurrentSong());
+      }
+      else{
+        addKeyValuePair(response, "message", "END OF SONGS");
+      }      
     }    
     else if (strcmp(command, "VOLUME") == 0) {
       int volume = atoi(data);
       double v = song.setVolume(volume);
-      Uart.print("VOLUME: ");
-      Uart.print(v);
     }
     else if (strcmp(command, "SEEK") == 0) {
       int seek = song.seek(atoi(data));
       int fs = song.getFileSize();
-      Uart.println(atoi(data)*fs);
-      Uart.println(atoi(data));
-      Uart.print("ADF");
-      Uart.println(seek);
-      Uart.print("SEEKING");
     }
     else{
-      Uart.print("Command does not exist");     
+        addKeyValuePair(response, "command", "MESSAGE",true);
+        addKeyValuePair(response, "message", "Command does not exist");
     }
     
+    Serial.println(response);
+    Uart.print(response);
     Uart.print('!');
   }
   song.loop();
