@@ -49,7 +49,6 @@ void returnPlayerState(){
   itoa(song.getVolume(), buff, 10);
   addKeyValuePair(response, "command", "CONNECTED", true);
   addKeyValuePair(response, "volume", buff);
-  addKeyValuePair(response, "state", song.isPlaying() ? "PLAYING" : "PAUSED" );
   addSongInfoToResponse();
   Serial.println(response);
 }
@@ -58,6 +57,7 @@ void addSongInfoToResponse(){
   addKeyValuePair(response, "title", song.getTitle());
   addKeyValuePair(response, "artist", song.getArtist());
   addKeyValuePair(response, "album", song.getAlbum());
+  addKeyValuePair(response, "state", song.isPlaying() ? "PLAYING" : "PAUSED" );
 }
 
 char* readCommand(char* buffer, char* data){
@@ -110,7 +110,7 @@ void loop() {
     }
     else if (strcmp(command, "PAUSE")==0){
       song.pause();
-        addSongInfoToResponse();
+      addSongInfoToResponse();
     }
     else if (strcmp(command, "NEXT_TRACK")==0){
       boolean next = song.nextFile();
