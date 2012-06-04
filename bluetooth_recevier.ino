@@ -10,7 +10,7 @@ HardwareSerial Uart = HardwareSerial();
 char val;         // variable to receive data from the Uart port
 int ledpin = 11;  // LED connected to pin 2 (on-board LED)
 Song song;
-char response[100];
+char response[160];
 
 void setup()
 {
@@ -49,11 +49,15 @@ void returnPlayerState(){
   itoa(song.getVolume(), buff, 10);
   addKeyValuePair(response, "command", "CONNECTED", true);
   addKeyValuePair(response, "volume", buff);
-  addKeyValuePair(response, "title", song.getCurrentSong());
   addKeyValuePair(response, "state", song.isPlaying() ? "PLAYING" : "PAUSED" );
-  //addKeyValuePair(response, "title", buff);
-  //addKeyValuePair(response, "volume2", "test");  
+  addSongInfoToResponse();
   Serial.println(response);
+}
+
+void addSongInfoToResponse(){
+  addKeyValuePair(response, "title", song.getTitle());
+  addKeyValuePair(response, "artist", song.getArtist());
+  addKeyValuePair(response, "album", song.getAlbum());
 }
 
 char* readCommand(char* buffer, char* data){
@@ -102,16 +106,16 @@ void loop() {
     }
     else if (strcmp(command, "PLAY")==0){
       song.play();
-      addKeyValuePair(response, "title", song.getCurrentSong());
+      addSongInfoToResponse();
     }
     else if (strcmp(command, "PAUSE")==0){
       song.pause();
-      addKeyValuePair(response, "title", song.getCurrentSong());
+        addSongInfoToResponse();
     }
     else if (strcmp(command, "NEXT_TRACK")==0){
       boolean next = song.nextFile();
       if (next) {
-        addKeyValuePair(response, "title", song.getCurrentSong());
+        addSongInfoToResponse();
       }
       else{
         addKeyValuePair(response, "message", "End of playlist");
@@ -120,7 +124,7 @@ void loop() {
     else if (strcmp(command, "PREV_TRACK")==0){
       boolean prev = song.prevFile();        
       if (prev) {
-        addKeyValuePair(response, "title", song.getCurrentSong());
+        addSongInfoToResponse();
       }
       else{
         addKeyValuePair(response, "message", "Begining of playlist");
