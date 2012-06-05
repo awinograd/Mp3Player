@@ -1,3 +1,5 @@
+#define END_CMD_CHAR '!'
+
 #include <SD.h>
 #include <EEPROM.h>
 
@@ -10,7 +12,7 @@ HardwareSerial Uart = HardwareSerial();
 char val;         // variable to receive data from the Uart port
 int ledpin = 11;  // LED connected to pin 2 (on-board LED)
 Song song;
-char response[160];
+char response[120];
 
 void setup()
 {
@@ -28,7 +30,7 @@ void addKeyValuePair(char* response, const char* key, const char* val, boolean f
     offset = 0;
     appendChars = "\"";
   }
-  
+
   int len = strlen(response);
   int lenKey = strlen(key);
   int lenVal = strlen(val);
@@ -41,7 +43,7 @@ void addKeyValuePair(char* response, const char* key, const char* val, boolean f
 }
 
 void addKeyValuePair(char* response, const char* key, const char* val){
- addKeyValuePair(response, key, val, false); 
+  addKeyValuePair(response, key, val, false); 
 }
 
 void returnPlayerState(){
@@ -57,21 +59,25 @@ void addSongInfoToResponse(){
   addKeyValuePair(response, "title", song.getTitle());
   addKeyValuePair(response, "artist", song.getArtist());
   addKeyValuePair(response, "album", song.getAlbum());
+  addKeyValuePair(response, "time", song.getTime());
   addKeyValuePair(response, "state", song.isPlaying() ? "PLAYING" : "PAUSED" );
 }
 
-char* readCommand(char* buffer, char* data){
+void readCommand(char* buffer, char* data){
   boolean dataInfo = false;
   int i = 0;
   delay(UART_BUFFER_SIZE);
-  
+
   while(Uart.available()){
     char inChar = Uart.read();
+    if (inChar == END_CMD_CHAR){
+      return; 
+    }
     if(!dataInfo){
       if (inChar == ','){
-       i=0;
-       dataInfo=true; 
-       continue;
+        i=0;
+        dataInfo=true; 
+        continue;
       }
       buffer[i] = inChar;  
       i++;
@@ -95,7 +101,7 @@ void loop() {
     char data[10];
     readCommand(command, data);
     addKeyValuePair(response, "command", command, true);
-    
+
     if (strcmp(command, "CONNECTED") == 0){
       returnPlayerState();
     }
@@ -135,23 +141,25 @@ void loop() {
       double v = song.setVolume(volume);
     }
     else if (strcmp(command, "SEEK") == 0) {
+      song.sendPlayerState();
       int seek = song.seek(atoi(data));
       int fs = song.getFileSize();
       if (seek){
-       addKeyValuePair(response, "message", "1");
+        addKeyValuePair(response, "message", "1");
       }
       else{
-               addKeyValuePair(response, "message", "0");
+        addKeyValuePair(response, "message", "0");
       }
     }
     else{
-        addKeyValuePair(response, "command", "MESSAGE",true);
-        addKeyValuePair(response, "message", "Command does not exist");
+      addKeyValuePair(response, "command", "MESSAGE",true);
+      addKeyValuePair(response, "message", "Command does not exist");
     }
-    
+
     Serial.println(response);
     Uart.print(response);
-    Uart.print('!');
+    Uart.print(END_CMD_CHAR);
   }
   song.loop();
 }
+
