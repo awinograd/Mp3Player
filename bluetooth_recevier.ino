@@ -63,13 +63,29 @@ void addSongInfoToResponse(){
   addKeyValuePair(response, "state", song.isPlaying() ? "PLAYING" : "PAUSED" );
 }
 
+boolean inputAvailable(){
+ return Uart.available() || Serial.available(); 
+}
+
+void readInput(char &c){
+  if(Uart.available()){
+    c = Uart.read();
+  }
+  if(Serial.available()){
+    c = Serial.read();
+  }  
+}
+
 void readCommand(char* buffer, char* data){
   boolean dataInfo = false;
   int i = 0;
+  
+  //wait a some time to allow the input stream to buffer so we can read whole commands in.
   delay(UART_BUFFER_SIZE);
 
-  while(Uart.available()){
-    char inChar = Uart.read();
+  while(inputAvailable()){
+    char inChar;
+    readInput(inChar);
     if (inChar == END_CMD_CHAR){
       return; 
     }
@@ -96,7 +112,7 @@ void readCommand(char* buffer, char* data){
 }
 
 void loop() {  
-  if( Uart.available() ) {      // if data is available to read
+  if( inputAvailable() ) {      // if data is available to read
     char command[UART_BUFFER_SIZE];
     char data[10];
     readCommand(command, data);
