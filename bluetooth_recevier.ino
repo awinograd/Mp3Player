@@ -35,7 +35,6 @@ void loop() {
       //state == HIGH ? Uart.print("LIGHT ON") : Uart.print("LIGHT OFF");
     }
     else if (strcmp(command, "PLAY")==0){
-      Serial.println("PLAY----");
       song.play();
       song.sendSongInfo();
     }
@@ -45,19 +44,13 @@ void loop() {
     }
     else if (strcmp(command, "NEXT_TRACK")==0){
       boolean next = song.nextFile();
-      if (next) {
-        song.sendSongInfo();
-      }
-      else{
+      if (!next) {
         handler.addKeyValuePair("message", "End of playlist");
       }
     }
     else if (strcmp(command, "PREV_TRACK")==0){
       boolean prev = song.prevFile();        
-      if (prev) {
-        song.sendSongInfo();
-      }
-      else{
+      if (!prev) {
         handler.addKeyValuePair("message", "Begining of playlist");
       }      
     }    
@@ -66,7 +59,7 @@ void loop() {
       double v = song.setVolume(volume);
     }
     else if (strcmp(command, "SEEK") == 0) {
-      song.sendPlayerState();
+      //song.sendPlayerState();
       int seek = song.seek(atoi(data));
       int fs = song.getFileSize();
       if (seek){
