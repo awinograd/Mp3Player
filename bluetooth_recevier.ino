@@ -59,15 +59,8 @@ void loop() {
       double v = song.setVolume(volume);
     }
     else if (strcmp(command, "SEEK") == 0) {
-      //song.sendPlayerState();
       int seek = song.seek(atoi(data));
-      int fs = song.getFileSize();
-      if (seek){
-        handler.addKeyValuePair("message", "1");
-      }
-      else{
-        handler.addKeyValuePair("message", "0");
-      }
+      handler.addKeyValuePair("position", seek);
     }
     else{
       handler.addKeyValuePair("command", "MESSAGE",true);
