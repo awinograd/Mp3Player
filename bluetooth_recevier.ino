@@ -14,8 +14,9 @@ JsonHandler handler;
 void setup()
 {
   song.setup(&handler);
-  song.nextFile();
   handler.setup();
+  song.sendPlayerState();
+  handler.respond();
   pinMode(ledpin, OUTPUT);  // pin 13 (on-board LED) as OUTPUT
 }
 
