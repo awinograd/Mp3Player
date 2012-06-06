@@ -13,27 +13,10 @@ JsonHandler handler;
 
 void setup()
 {
-  song.setup();
+  song.setup(&handler);
   song.nextFile();
   handler.setup();
   pinMode(ledpin, OUTPUT);  // pin 13 (on-board LED) as OUTPUT
-}
-
-
-void returnPlayerState(){
-  char buff[5];
-  itoa(song.getVolume(), buff, 10);
-  handler.addKeyValuePair("command", "CONNECTED", true);
-  handler.addKeyValuePair("volume", buff);
-  addSongInfoToResponse();
-}
-
-void addSongInfoToResponse(){
-  handler.addKeyValuePair("title", song.getTitle());
-  handler.addKeyValuePair("artist", song.getArtist());
-  handler.addKeyValuePair("album", song.getAlbum());
-  handler.addKeyValuePair("time", song.getTime());
-  handler.addKeyValuePair("state", song.isPlaying() ? "PLAYING" : "PAUSED" );
 }
 
 void loop() {  
@@ -44,7 +27,7 @@ void loop() {
     handler.addKeyValuePair("command", command, true);
 
     if (strcmp(command, "CONNECTED") == 0){
-      returnPlayerState();
+      song.sendPlayerState();
     }
     else if (strcmp(command, "LED")==0){
       int state = atoi(data);
@@ -54,16 +37,16 @@ void loop() {
     else if (strcmp(command, "PLAY")==0){
       Serial.println("PLAY----");
       song.play();
-      addSongInfoToResponse();
+      song.sendSongInfo();
     }
     else if (strcmp(command, "PAUSE")==0){
       song.pause();
-      addSongInfoToResponse();
+      song.sendSongInfo();
     }
     else if (strcmp(command, "NEXT_TRACK")==0){
       boolean next = song.nextFile();
       if (next) {
-        addSongInfoToResponse();
+        song.sendSongInfo();
       }
       else{
         handler.addKeyValuePair("message", "End of playlist");
@@ -72,7 +55,7 @@ void loop() {
     else if (strcmp(command, "PREV_TRACK")==0){
       boolean prev = song.prevFile();        
       if (prev) {
-        addSongInfoToResponse();
+        song.sendSongInfo();
       }
       else{
         handler.addKeyValuePair("message", "Begining of playlist");
